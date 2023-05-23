@@ -52,6 +52,8 @@ class SLLinesRepositoryImplTest {
         Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
         Collection<StopPoint> stopPoints =  slLinesRepository.getStopPoints();
         assertEquals(1, stopPoints.size());
+        assertEquals(10001, stopPoints.stream().toList().get(0).id());
+        assertEquals("Stadshagsplan", stopPoints.stream().toList().get(0).name());
     }
 
     private String getStopPointsJson() {
