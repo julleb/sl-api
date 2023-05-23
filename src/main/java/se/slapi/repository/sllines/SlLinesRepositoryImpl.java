@@ -10,10 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import se.slapi.repository.exceptions.RepositoryException;
-import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
-import se.slapi.repository.sllines.model.ModelType;
-import se.slapi.repository.sllines.model.SlLinesApiResponse;
-import se.slapi.repository.sllines.model.TransportModeCode;
+import se.slapi.repository.sllines.model.*;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -45,9 +42,7 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
     @Override
     public Collection<JourneyPatternPointOnLine> getListOfJourneyPatternPointOnLine(TransportModeCode transportModeCode) throws RepositoryException {
         Objects.requireNonNull(transportModeCode);
-        var uriBuilder = UriComponentsBuilder.fromHttpUrl(SL_API_URL)
-                .queryParam("key", API_KEY)
-                .queryParam("model", ModelType.JOURNEY_PATTERN_POINT_ON_LINE.toString());
+        var uriBuilder = createBaseApiUrl(ModelType.JOURNEY_PATTERN_POINT_ON_LINE);
         if(transportModeCode != TransportModeCode.ALL) {
             uriBuilder.queryParam("DefaultTransportModeCode", transportModeCode);
         }
@@ -66,33 +61,26 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
         }
     }
 
-    private String getJsonTest() {
-       return """
-                {
-                  "StatusCode": 0,
-                  "Message": null,
-                  "ExecutionTime": 482,
-                  "ResponseData": {
-                    "Version": "2023-05-22 00:12",
-                    "Type": "JourneyPatternPointOnLine",
-                    "Result": [
-                      {
-                        "LineNumber": "1",
-                        "DirectionCode": "1",
-                        "JourneyPatternPointNumber": "10008",
-                        "LastModifiedUtcDateTime": "2022-02-15 00:00:00.000",
-                        "ExistsFromDate": "2022-02-15 00:00:00.000"
-                      },
-                      {
-                        "LineNumber": "1",
-                        "DirectionCode": "1",
-                        "JourneyPatternPointNumber": "10012",
-                        "LastModifiedUtcDateTime": "2023-03-07 00:00:00.000",
-                        "ExistsFromDate": "2023-03-07 00:00:00.000"
-                      }
-                    ]
-                  }
-                }
-                """;
+    @Override
+    public Collection<StopPoint> getStopPoints() throws RepositoryException {
+        var uriBuilder = createBaseApiUrl(ModelType.STOP);
+        String url = uriBuilder.toUriString();
+        var response = restTemplate.getForEntity(url, String.class);
+        String responseAsString = response.getBody();
+        ObjectMapper ob = new ObjectMapper();
+        try {
+            TypeReference<SlLinesApiResponse<StopPoint>> typeRef
+                    = new TypeReference<SlLinesApiResponse<StopPoint>>(){};
+            SlLinesApiResponse<StopPoint> apiResponse = ob.readValue(responseAsString, typeRef);
+            return apiResponse.responseData().result();
+        } catch (JsonProcessingException e) {
+            throw new RepositoryException("Failed to parse json", e);
+        }
+    }
+
+    private UriComponentsBuilder createBaseApiUrl(ModelType modelType) {
+        return UriComponentsBuilder.fromHttpUrl(SL_API_URL)
+                .queryParam("key", API_KEY)
+                .queryParam("model", modelType.toString());
     }
 }

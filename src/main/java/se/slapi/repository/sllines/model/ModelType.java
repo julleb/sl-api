@@ -4,7 +4,14 @@ public enum ModelType {
 
     JOURNEY_PATTERN_POINT_ON_LINE {
         public String toString() {
-            return "JourneyPatternPointOnLine";
+            return "jour";
+        }
+    },
+
+    STOP {
+        public String toString() {
+            return "stop";
         }
     };
+
 }

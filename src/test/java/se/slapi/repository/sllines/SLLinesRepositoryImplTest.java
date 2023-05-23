@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import se.slapi.repository.exceptions.RepositoryException;
 import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
+import se.slapi.repository.sllines.model.StopPoint;
 import se.slapi.repository.sllines.model.TransportModeCode;
 
 import java.util.Collection;
@@ -42,7 +43,42 @@ class SLLinesRepositoryImplTest {
 
     @Test
     void testListOfJourneyPatternPointOnLineWhenHttpNotFound() {
-        
+
+    }
+
+    @Test
+    void testGetStopPoints() throws RepositoryException {
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(getStopPointsJson(), HttpStatusCode.valueOf(200));
+        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        Collection<StopPoint> stopPoints =  slLinesRepository.getStopPoints();
+        assertEquals(1, stopPoints.size());
+    }
+
+    private String getStopPointsJson() {
+        return """
+                {
+                "StatusCode":0,
+                "Message":null,
+                "ExecutionTime":720,
+                "ResponseData":
+                    {
+                        "Version":"2023-05-23 00:12",
+                        "Type":"StopPoint",
+                        "Result":[
+                            {
+                                "StopPointNumber":"10001",
+                                "StopPointName":"Stadshagsplan",
+                                "StopAreaNumber":"10001",
+                                "LocationNorthingCoordinate":"59.3373571967995",
+                                "LocationEastingCoordinate":"18.0214674159693",
+                                "ZoneShortName":"A","StopAreaTypeCode":"BUSTERM",
+                                "LastModifiedUtcDateTime":"2022-10-28 00:00:00.000",
+                                "ExistsFromDate":"2022-10-28 00:00:00.000"
+                            }
+                        ]
+                    }
+                }
+                """;
     }
 
     private String getJourneyPatternPointOnLineJson() {
