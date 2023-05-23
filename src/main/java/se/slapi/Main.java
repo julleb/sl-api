@@ -1,13 +1,14 @@
 package se.slapi;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-import se.slapi.repository.busline.BusLineRepository;
+import se.slapi.repository.sllines.SlLinesRepository;
+import se.slapi.repository.sllines.model.TransportModeCode;
 
 
 @Configuration
@@ -15,18 +16,20 @@ import se.slapi.repository.busline.BusLineRepository;
 public class Main {
 
     public static void main(String[] args) {
-        SpringApplication.run(Main.class, args);
+        new SpringApplicationBuilder(Main.class)
+                .web(WebApplicationType.NONE)
+                .run(args);
     }
     @Component
     public class CommandLiner implements CommandLineRunner {
 
         @Autowired
-        private BusLineRepository busLineRepository;
+        private SlLinesRepository slLinesRepository;
 
         @Override
         public void run(String... args) throws Exception {
             System.out.println("SL API");
-            busLineRepository.getStopsAndLines();
+            slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS);
         }
 
     }
