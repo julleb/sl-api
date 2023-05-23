@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import se.slapi.repository.sllines.SlLinesRepository;
 import se.slapi.repository.sllines.model.TransportModeCode;
+import se.slapi.service.SLService;
 
 
 @Configuration
@@ -24,12 +25,12 @@ public class Main {
     public class CommandLiner implements CommandLineRunner {
 
         @Autowired
-        private SlLinesRepository slLinesRepository;
+        private SLService slService;
 
         @Override
         public void run(String... args) throws Exception {
             System.out.println("SL API");
-            //slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS);
+            slService.doTheTask();
         }
 
     }

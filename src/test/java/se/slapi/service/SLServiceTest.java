@@ -12,6 +12,7 @@ import se.slapi.service.model.BusInformation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,28 +41,51 @@ class SLServiceTest {
         }
     }
 
+    @Test
+    void testDoTheTask() throws ServiceException, RepositoryException {
+        mockSlLinesRepository();
+
+        Collection<BusInformation> busInformations = slService.doTheTask();
+        assertEquals(4, busInformations.size());
+        var list = busInformations.stream().toList();
+        assertEquals(1, list.get(0).busLineNumber());
+        assertEquals(4, list.get(1).busLineNumber());
+        assertEquals(3, list.get(2).busLineNumber());
+        assertEquals(2, list.get(3).busLineNumber());
+    }
+
+
+    List<StopPoint> createStopPoints() {
+        List<StopPoint> listOfStopPoints = new ArrayList<>();
+        for(int i = 0; i < 100; i++) {
+            var stopPoint = new StopPoint(i, "Slipsknutsgatan " + i);
+            listOfStopPoints.add(stopPoint);
+        }
+        return listOfStopPoints;
+    }
+
+    List<JourneyPatternPointOnLine> createABusLine(int lineNumber, int amountOfStops) {
+        var stopPoints = createStopPoints();
+        List<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
+        for(int i = 0; i < amountOfStops; i++) {
+            var journeyPatternPoint = new JourneyPatternPointOnLine(lineNumber, 2, stopPoints.get(i).id());
+            listOfJourneyPatternPointOnLine.add(journeyPatternPoint);
+        }
+        return listOfJourneyPatternPointOnLine;
+    }
 
     void mockSlLinesRepository() throws RepositoryException {
         Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
         Collection<StopPoint> listOfStopPoints = new ArrayList<>();
 
-        //lineNumber 1
-        for(int i = 0; i < 10; i++) {
-            var stopPoint = new StopPoint(i, "Slipsknutsgatan " + i);
-            var journeyPatternPoint = new JourneyPatternPointOnLine(1, 2, stopPoint.id());
-            listOfStopPoints.add(stopPoint);
-            listOfJourneyPatternPointOnLine.add(journeyPatternPoint);
 
-        }
+        listOfJourneyPatternPointOnLine.addAll(createABusLine(1, 10));
+        listOfJourneyPatternPointOnLine.addAll(createABusLine(2, 3));
+        listOfJourneyPatternPointOnLine.addAll(createABusLine(3, 5));
+        listOfJourneyPatternPointOnLine.addAll(createABusLine(4, 8));
 
-        //lineNumber 2
-        for(int i = 10; i < 20; i++) {
-            var stopPoint = new StopPoint(i, "Dualitygatan " + i);
-            var journeyPatternPoint = new JourneyPatternPointOnLine(2, 2, stopPoint.id());
-            listOfStopPoints.add(stopPoint);
-            listOfJourneyPatternPointOnLine.add(journeyPatternPoint);
+        listOfStopPoints.addAll(createStopPoints());
 
-        }
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
         Mockito.when(slLinesRepository.getStopPoints()).thenReturn(listOfStopPoints);
     }
