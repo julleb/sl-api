@@ -3,6 +3,8 @@ package se.slapi.repository.sllines;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
@@ -18,19 +20,26 @@ import java.util.Objects;
 
 @Repository
 @Profile("!slLinesRepositoryMock")
-public class SlLinesRepositoryImpl implements SlLinesRepository {
-    
+class SlLinesRepositoryImpl implements SlLinesRepository {
 
-    private static String SL_API_URL = "https://api.sl.se/api2/LineData.json";
 
-    private static String API_KEY = "xxx"; //should be injected as env-var
+    @Value("${se.slapi.sllines.api.url}")
+    private String SL_API_URL;
+
+    @Value("${se.slapi.sllines.api.key}")
+    private String API_KEY;
 
     private RestTemplate restTemplate;
 
+    @Autowired
+    SlLinesRepositoryImpl(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
-    //TODO autowire resttemplate
-    SlLinesRepositoryImpl() {
-        restTemplate = new RestTemplate();
+    SlLinesRepositoryImpl(RestTemplate restTemplate, String apiUrl, String apiKey) {
+        this.restTemplate = restTemplate;
+        this.SL_API_URL = apiUrl;
+        this.API_KEY = apiKey;
     }
 
     @Override
@@ -43,9 +52,8 @@ public class SlLinesRepositoryImpl implements SlLinesRepository {
             uriBuilder.queryParam("DefaultTransportModeCode", transportModeCode);
         }
         String url = uriBuilder.toUriString();
-        System.out.println(url);
-        String responseAsString = getJsonTest();
-        //var responseAsString = restTemplate.getForEntity(url, String.class);
+        var response = restTemplate.getForEntity(url, String.class);
+        String responseAsString = response.getBody();
         //TODO hantera http errors
         ObjectMapper ob = new ObjectMapper();
         try {
