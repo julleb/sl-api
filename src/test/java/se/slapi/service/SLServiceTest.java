@@ -8,7 +8,7 @@ import se.slapi.repository.sllines.SlLinesRepository;
 import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
 import se.slapi.repository.sllines.model.StopPoint;
 import se.slapi.repository.sllines.model.TransportModeCode;
-import se.slapi.service.model.BusInformation;
+import se.slapi.service.model.BuslineInformation;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,7 +34,7 @@ class SLServiceTest {
     @Test
     void testGetBusInformation() throws RepositoryException, ServiceException {
         mockSlLinesRepository();
-        Map<Integer, BusInformation> busInformationMap = slService.getBusLineInformation();
+        Map<Integer, BuslineInformation> busInformationMap = slService.getBusLineInformation();
         assertEquals(10, busInformationMap.get(1).stopNames().size());
         for(String stopName : busInformationMap.get(1).stopNames()) {
             assertTrue(stopName.contains("Slipsknutsgatan"));
@@ -45,13 +45,13 @@ class SLServiceTest {
     void testDoTheTask() throws ServiceException, RepositoryException {
         mockSlLinesRepository();
 
-        Collection<BusInformation> busInformations = slService.doTheTask();
-        assertEquals(4, busInformations.size());
-        var list = busInformations.stream().toList();
-        assertEquals(1, list.get(0).busLineNumber());
-        assertEquals(4, list.get(1).busLineNumber());
-        assertEquals(3, list.get(2).busLineNumber());
-        assertEquals(2, list.get(3).busLineNumber());
+        Collection<BuslineInformation> buslineInformations = slService.doTheTask();
+        assertEquals(4, buslineInformations.size());
+        var list = buslineInformations.stream().toList();
+        assertEquals(1, list.get(0).buslineNumber());
+        assertEquals(4, list.get(1).buslineNumber());
+        assertEquals(3, list.get(2).buslineNumber());
+        assertEquals(2, list.get(3).buslineNumber());
     }
 
 

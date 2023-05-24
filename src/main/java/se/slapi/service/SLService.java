@@ -8,10 +8,9 @@ import se.slapi.repository.sllines.SlLinesRepository;
 import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
 import se.slapi.repository.sllines.model.StopPoint;
 import se.slapi.repository.sllines.model.TransportModeCode;
-import se.slapi.service.model.BusInformation;
+import se.slapi.service.model.BuslineInformation;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class SLService {
@@ -23,7 +22,7 @@ public class SLService {
         this.slLinesRepository = slLinesRepository;
     }
 
-    Map<Integer, BusInformation> getBusLineInformation() throws ServiceException {
+    Map<Integer, BuslineInformation> getBusLineInformation() throws ServiceException {
         Collection<JourneyPatternPointOnLine> journeyPatternPointOnLineCollection;
         Collection<StopPoint> stopPoints;
         try {
@@ -38,39 +37,39 @@ public class SLService {
             stopPointsMap.put(stopPoint.id(), stopPoint);
         }
 
-        Map<Integer, BusInformation> busInformationMap = new HashMap<>();
+        Map<Integer, BuslineInformation> busInformationMap = new HashMap<>();
         for(var journeyPatternPoint : journeyPatternPointOnLineCollection) {
             int busLineNumber = journeyPatternPoint.lineNumber();
-            BusInformation busInformation = busInformationMap.get(busLineNumber);
-            if(busInformation == null) {
-                busInformation = new BusInformation(busLineNumber, new ArrayList<>());
-                busInformationMap.put(busInformation.busLineNumber(), busInformation);
+            BuslineInformation busLineInformation = busInformationMap.get(busLineNumber);
+            if(busLineInformation == null) {
+                busLineInformation = new BuslineInformation(busLineNumber, new ArrayList<>());
+                busInformationMap.put(busLineInformation.buslineNumber(), busLineInformation);
             }
             int stopPointId = journeyPatternPoint.journeyPatternPointNumber();
             StopPoint stopPoint = stopPointsMap.get(stopPointId);
             String stopPointName = stopPoint == null || stopPoint.name() == null ? "" : stopPoint.name();
-            if(!busInformation.stopNames().contains(stopPointName)) //SL api returnerar dubbletter? vrf? TODO dumt att gå igenom hela arrayen varje gång
-                busInformation.stopNames().add(stopPointName);
+            if(!busLineInformation.stopNames().contains(stopPointName)) //SL api returnerar dubbletter? vrf? TODO dumt att gå igenom hela arrayen varje gång
+                busLineInformation.stopNames().add(stopPointName);
         }
         return busInformationMap;
     }
 
-    public Collection<BusInformation> doTheTask() throws ServiceException {
-        Map<Integer, BusInformation> busInformationMap = getBusLineInformation();
-        List<BusInformation> busInformations
+    public Collection<BuslineInformation> doTheTask() throws ServiceException {
+        Map<Integer, BuslineInformation> busInformationMap = getBusLineInformation();
+        List<BuslineInformation> buslineInformations
                 = busInformationMap.values().stream().sorted(Comparator.comparing(o -> o.stopNames().size())).toList();
 
-        List<BusInformation> reversedBusInformationList = new ArrayList<>();
-        for(int i = busInformations.size() - 1; i >= 0; i--) {
-            reversedBusInformationList.add(busInformations.get(i));
+        List<BuslineInformation> reversedBuslineInformationList = new ArrayList<>();
+        for(int i = buslineInformations.size() - 1; i >= 0; i--) {
+            reversedBuslineInformationList.add(buslineInformations.get(i));
         }
 
-        reversedBusInformationList = reversedBusInformationList.stream().limit(10).toList();
+        reversedBuslineInformationList = reversedBuslineInformationList.stream().limit(10).toList();
         System.out.println("TOP 10 BUS LINES");
-        for(var busInfo : reversedBusInformationList) {
-            System.out.println("BusLine="+busInfo.busLineNumber() + " AmountOfStops="+ busInfo.stopNames().size() + " StopNames="+busInfo.stopNames());
+        for(var busInfo : reversedBuslineInformationList) {
+            System.out.println("BusLine="+busInfo.buslineNumber() + " AmountOfStops="+ busInfo.stopNames().size() + " StopNames="+busInfo.stopNames());
         }
-        return reversedBusInformationList;
+        return reversedBuslineInformationList;
 
     }
 }
