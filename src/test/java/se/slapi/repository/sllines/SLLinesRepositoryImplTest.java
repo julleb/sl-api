@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import se.slapi.repository.exceptions.RepositoryException;
 import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
@@ -14,6 +15,7 @@ import se.slapi.repository.sllines.model.TransportModeCode;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class SLLinesRepositoryImplTest {
 
@@ -42,8 +44,22 @@ class SLLinesRepositoryImplTest {
     }
 
     @Test
-    void testListOfJourneyPatternPointOnLineWhenHttpNotFound() {
+    void testListOfJourneyPatternPointOnLineWhenStatusIsNotOk() {
+        String json = """
+                {
+                  "StatusCode": 1337,
+                  "Message": "something bad"
+                }
+                """;
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(json, HttpStatusCode.valueOf(200));
+        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        assertThrows(RepositoryException.class, () -> slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS));
+    }
 
+    @Test
+    void testListOfJourneyPatternPointOnLineWhenHttpError() {
+        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenThrow(RestClientException.class);
+        assertThrows(RepositoryException.class, () -> slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS));
     }
 
     @Test

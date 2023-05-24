@@ -1,0 +1,5 @@
+se.slapi:
+  sllines:
+      api:
+        key: ${API_KEY:xxx}
+        url: https://api.sl.se/api2/LineData.json

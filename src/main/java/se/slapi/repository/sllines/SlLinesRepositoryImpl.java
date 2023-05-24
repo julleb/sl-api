@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import se.slapi.repository.exceptions.RepositoryException;
@@ -47,15 +48,13 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
             uriBuilder.queryParam("DefaultTransportModeCode", transportModeCode);
         }
         String url = uriBuilder.toUriString();
-        var response = restTemplate.getForEntity(url, String.class);
-        String responseAsString = response.getBody();
-        //TODO hantera http errors
+        String responseAsString = callApi(url);
         ObjectMapper ob = new ObjectMapper();
         try {
             TypeReference<SlLinesApiResponse<JourneyPatternPointOnLine>> typeRef
                     = new TypeReference<SlLinesApiResponse<JourneyPatternPointOnLine>>(){};
             SlLinesApiResponse<JourneyPatternPointOnLine> apiResponse = ob.readValue(responseAsString, typeRef);
-            return apiResponse.responseData().result();
+            return handleApiResponse(apiResponse);
         } catch (JsonProcessingException e) {
             throw new RepositoryException("Failed to parse json", e);
         }
@@ -65,16 +64,33 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
     public Collection<StopPoint> getStopPoints() throws RepositoryException {
         var uriBuilder = createBaseApiUrl(ModelType.STOP);
         String url = uriBuilder.toUriString();
-        var response = restTemplate.getForEntity(url, String.class);
-        String responseAsString = response.getBody();
+        String responseAsString = callApi(url);
         ObjectMapper ob = new ObjectMapper();
+
         try {
             TypeReference<SlLinesApiResponse<StopPoint>> typeRef
                     = new TypeReference<SlLinesApiResponse<StopPoint>>(){};
             SlLinesApiResponse<StopPoint> apiResponse = ob.readValue(responseAsString, typeRef);
-            return apiResponse.responseData().result();
+            return handleApiResponse(apiResponse);
         } catch (JsonProcessingException e) {
             throw new RepositoryException("Failed to parse json", e);
+        }
+    }
+
+    private <T> Collection<T> handleApiResponse(SlLinesApiResponse<T> apiResponse) throws RepositoryException {
+        if(apiResponse.statusCode() == 0) {
+            return apiResponse.responseData().result();
+        } else {
+            throw new RepositoryException("No response from api. Message=" + apiResponse.message());
+        }
+    }
+
+    private String callApi(String url) throws RepositoryException {
+        try {
+            var response = restTemplate.getForEntity(url, String.class);
+            return response.getBody();
+        } catch(RestClientException e) {
+            throw new RepositoryException(e.getMessage(), e);
         }
     }
 
