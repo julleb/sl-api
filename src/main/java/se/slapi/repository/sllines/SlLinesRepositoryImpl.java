@@ -3,6 +3,8 @@ package se.slapi.repository.sllines;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +22,7 @@ import java.util.Objects;
 @Profile("!slLinesRepositoryMock")
 class SlLinesRepositoryImpl implements SlLinesRepository {
 
+    private final static Logger logger = LoggerFactory.getLogger(SlLinesRepositoryImpl.class);
 
     @Value("${se.slapi.sllines.api.url}")
     private String SL_API_URL;
@@ -52,10 +55,12 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
         ObjectMapper ob = new ObjectMapper();
         try {
             TypeReference<SlLinesApiResponse<JourneyPatternPointOnLine>> typeRef
-                    = new TypeReference<SlLinesApiResponse<JourneyPatternPointOnLine>>(){};
+                    = new TypeReference<>(){};
             SlLinesApiResponse<JourneyPatternPointOnLine> apiResponse = ob.readValue(responseAsString, typeRef);
             return handleApiResponse(apiResponse);
         } catch (JsonProcessingException e) {
+            logger.error("Failed when parsing response from SL Lines API at url=" + url
+                    + ". ErrorMessage=" + e.getMessage() + " Response=" + responseAsString, e);
             throw new RepositoryException("Failed to parse json", e);
         }
     }
@@ -69,11 +74,13 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
 
         try {
             TypeReference<SlLinesApiResponse<StopPoint>> typeRef
-                    = new TypeReference<SlLinesApiResponse<StopPoint>>(){};
+                    = new TypeReference<>(){};
             SlLinesApiResponse<StopPoint> apiResponse = ob.readValue(responseAsString, typeRef);
             return handleApiResponse(apiResponse);
         } catch (JsonProcessingException e) {
-            throw new RepositoryException("Failed to parse json", e);
+            logger.error("Failed when parsing response from SL Lines API at url=" + url
+                    + ". ErrorMessage=" + e.getMessage() + " Response=" + responseAsString, e);
+            throw new RepositoryException("Failed to parse response", e);
         }
     }
 
@@ -81,7 +88,7 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
         if(apiResponse.statusCode() == 0) {
             return apiResponse.responseData().result();
         } else {
-            throw new RepositoryException("No response from api. Message=" + apiResponse.message());
+            throw new RepositoryException("Error when calling api. Message=" + apiResponse.message());
         }
     }
 

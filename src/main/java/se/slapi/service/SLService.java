@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 @Service
 public class SLService {
 
-
     private SlLinesRepository slLinesRepository;
 
     @Autowired
@@ -31,7 +30,7 @@ public class SLService {
             journeyPatternPointOnLineCollection = slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS);
             stopPoints = slLinesRepository.getStopPoints();
         } catch (RepositoryException e) {
-            throw new ServiceException(); //TODO
+            throw new ServiceException(e.getMessage(), e);
         }
 
         Map<Integer, StopPoint> stopPointsMap = new HashMap<>();
