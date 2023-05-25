@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import se.slapi.service.AssignmentTask;
 import se.slapi.service.BuslineService;
 
 
@@ -28,6 +29,7 @@ public class Main {
         @Override
         public void run(String... args) throws Exception {
             System.out.println("SL API");
+            new AssignmentTask().task(buslineService);
         }
 
     }
