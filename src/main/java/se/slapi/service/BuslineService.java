@@ -64,7 +64,7 @@ public class BuslineService {
             StopPoint stopPoint = stopPointsMap.get(stopPointId);
             if(stopPoint == null) {
                 logger.warn("StopPointId=" + stopPointId
-                        + " from JourneyPatternPoint with buslineId= " + busLineNumber + " journeyPatternPointNumber=" + journeyPatternPoint.journeyPatternPointNumber() + " does not exists");
+                        + " from JourneyPatternPoint with buslineId=" + busLineNumber + " journeyPatternPointNumber=" + journeyPatternPoint.journeyPatternPointNumber() + " does not exists");
             }
             trafficRoute.stopPoints().add(stopPoint);
         }
