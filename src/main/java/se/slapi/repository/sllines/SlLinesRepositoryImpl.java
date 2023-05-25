@@ -18,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import se.slapi.repository.exceptions.RepositoryException;
 import se.slapi.repository.sllines.model.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -101,7 +102,9 @@ class SlLinesRepositoryImpl implements SlLinesRepository {
         var httpEntity = new HttpEntity<>(headers);
         try {
             var response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
-            return response.getBody();
+            String body = response.getBody();
+            String bodyAsUtf8 = new String(body.getBytes(StandardCharsets.UTF_8));
+            return bodyAsUtf8;
         } catch(RestClientException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
