@@ -3,6 +3,7 @@ package se.slapi.repository.sllines;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
@@ -35,7 +36,7 @@ class SLLinesRepositoryImplTest {
     @Test
     void testListOfJourneyPatternPointOnLine() throws RepositoryException {
         ResponseEntity<String> responseEntity = new ResponseEntity<>(getJourneyPatternPointOnLineJson(), HttpStatusCode.valueOf(200));
-        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        Mockito.when(mockedRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenReturn(responseEntity);
         Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS);
         assertEquals(2, listOfJourneyPatternPointOnLine.size());
         var asList = listOfJourneyPatternPointOnLine.stream().toList();
@@ -52,20 +53,20 @@ class SLLinesRepositoryImplTest {
                 }
                 """;
         ResponseEntity<String> responseEntity = new ResponseEntity<>(json, HttpStatusCode.valueOf(200));
-        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        Mockito.when(mockedRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenReturn(responseEntity);
         assertThrows(RepositoryException.class, () -> slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS));
     }
 
     @Test
     void testListOfJourneyPatternPointOnLineWhenHttpError() {
-        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenThrow(RestClientException.class);
+        Mockito.when(mockedRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenThrow(RestClientException.class);
         assertThrows(RepositoryException.class, () -> slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS));
     }
 
     @Test
     void testGetStopPoints() throws RepositoryException {
         ResponseEntity<String> responseEntity = new ResponseEntity<>(getStopPointsJson(), HttpStatusCode.valueOf(200));
-        Mockito.when(mockedRestTemplate.getForEntity(Mockito.anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        Mockito.when(mockedRestTemplate.exchange(Mockito.anyString(), Mockito.eq(HttpMethod.GET), Mockito.any(), Mockito.eq(String.class))).thenReturn(responseEntity);
         Collection<StopPoint> stopPoints =  slLinesRepository.getStopPoints();
         assertEquals(1, stopPoints.size());
         assertEquals(10001, stopPoints.stream().toList().get(0).id());
