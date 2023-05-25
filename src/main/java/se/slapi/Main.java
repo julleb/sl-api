@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import se.slapi.service.AssignmentTask;
 import se.slapi.service.BuslineService;
+import se.slapi.service.ServiceException;
 
 
 @Configuration
@@ -29,7 +30,12 @@ public class Main {
         @Override
         public void run(String... args) throws Exception {
             System.out.println("SL API");
-            new AssignmentTask().task(buslineService);
+            try {
+                new AssignmentTask().task(buslineService);
+            } catch(ServiceException e) {
+                System.err.println(e.getMessage());
+            }
+
         }
 
     }
