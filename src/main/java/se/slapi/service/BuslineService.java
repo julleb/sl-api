@@ -65,6 +65,8 @@ public class BuslineService {
             if(stopPoint == null) {
                 logger.warn("StopPointId=" + stopPointId
                         + " from JourneyPatternPoint with buslineId=" + busLineNumber + " journeyPatternPointNumber=" + journeyPatternPoint.journeyPatternPointNumber() + " does not exists");
+                //lets skip this stopPoint since its pretty much unknown?
+                continue;
             }
             trafficRoute.stopPoints().add(stopPoint);
         }
