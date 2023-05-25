@@ -38,6 +38,8 @@ class BuslineServiceTest {
         Collection<StopPoint> listOfStopPoints = new ArrayList<>();
         listOfStopPoints.addAll(stopPoints);
         listOfJourneyPatternPointOnLine.addAll(journeys);
+        journeys = createJourneyPatterPointWithStopPoints(expectedBuslineId, 3, stopPoints);
+        listOfJourneyPatternPointOnLine.addAll(journeys);
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
         Mockito.when(slLinesRepository.getStopPoints()).thenReturn(listOfStopPoints);
 
@@ -46,12 +48,12 @@ class BuslineServiceTest {
         Busline busline = buslines.get(0);
         assertEquals(expectedBuslineId, busline.id());
         List<TrafficRoute> trafficRoutes = busline.trafficRoutes();
-        assertEquals(1, trafficRoutes.size());
+        assertEquals(2, trafficRoutes.size());
         assertEquals(expectedAmountOfStopPoints, trafficRoutes.get(0).stopPoints().size());
     }
 
     @Test
-    void testGetBuslineWhenSeveralBuslines() throws RepositoryException, ServiceException {
+    void testGetBuslinesWhenSeveralBuslines() throws RepositoryException, ServiceException {
         Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
         Collection<StopPoint> listOfStopPoints = new ArrayList<>();
         int expectedAmountOfBuslines = 3;
