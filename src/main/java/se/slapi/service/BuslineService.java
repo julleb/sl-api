@@ -9,7 +9,6 @@ import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
 import se.slapi.repository.sllines.model.StopPoint;
 import se.slapi.repository.sllines.model.TransportModeCode;
 import se.slapi.service.model.Busline;
-import se.slapi.service.model.BuslineInformation;
 import se.slapi.service.model.TrafficRoute;
 
 import java.util.*;
