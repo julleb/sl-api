@@ -8,7 +8,9 @@ import se.slapi.repository.sllines.SlLinesRepository;
 import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
 import se.slapi.repository.sllines.model.StopPoint;
 import se.slapi.repository.sllines.model.TransportModeCode;
+import se.slapi.service.model.Busline;
 import se.slapi.service.model.BuslineInformation;
+import se.slapi.service.model.TrafficRoute;
 
 import java.util.*;
 
@@ -28,89 +30,91 @@ class BuslineServiceTest {
     }
 
     @Test
-    void testGetBuslineInformation() throws RepositoryException, ServiceException {
-        mockSlLinesRepository();
-        Map<Integer, BuslineInformation> buslineInformationMap = buslineService.getBusLineInformation();
-        assertEquals(10, buslineInformationMap.get(1).stopNames().size());
-        for(String stopName : buslineInformationMap.get(1).stopNames()) {
-            assertTrue(stopName.contains("Slipsknutsgatan"));
+    void testGetBuslines() throws RepositoryException, ServiceException {
+        int expectedAmountOfStopPoints = 3;
+        int expectedBuslineId = 1;
+        var stopPoints = createStopPoints(expectedAmountOfStopPoints);
+        var journeys = createJourneyPatterPointWithStopPoints(expectedBuslineId, 2, stopPoints);
+        Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
+        Collection<StopPoint> listOfStopPoints = new ArrayList<>();
+        listOfStopPoints.addAll(stopPoints);
+        listOfJourneyPatternPointOnLine.addAll(journeys);
+        Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
+        Mockito.when(slLinesRepository.getStopPoints()).thenReturn(listOfStopPoints);
+
+        List<Busline> buslines = buslineService.getBuslines();
+        assertEquals(1, buslines.size());
+        Busline busline = buslines.get(0);
+        assertEquals(expectedBuslineId, busline.id());
+        List<TrafficRoute> trafficRoutes = busline.trafficRoutes();
+        assertEquals(1, trafficRoutes.size());
+        assertEquals(expectedAmountOfStopPoints, trafficRoutes.get(0).stopPoints().size());
+    }
+
+    @Test
+    void testGetBuslineWhenSeveralBuslines() throws RepositoryException, ServiceException {
+        Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
+        Collection<StopPoint> listOfStopPoints = new ArrayList<>();
+        int expectedAmountOfBuslines = 3;
+        for(int i = 0; i < expectedAmountOfBuslines; i++) {
+            var stopPoints = createStopPoints(i + 1);
+            var journeys = createJourneyPatterPointWithStopPoints(i+1, 2, stopPoints);
+            listOfJourneyPatternPointOnLine.addAll(journeys);
         }
+        Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
+        Mockito.when(slLinesRepository.getStopPoints()).thenReturn(listOfStopPoints);
+
+        List<Busline> buslines = buslineService.getBuslines();
+        assertEquals(expectedAmountOfBuslines, buslines.size());
     }
 
     @Test
     void testGetBuslineInformationWhenJourneyPatternPointOnLineRepositoryError() throws RepositoryException {
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenThrow(RepositoryException.class);
-        assertThrows(ServiceException.class, () -> buslineService.getBusLineInformation());
+        assertThrows(ServiceException.class, () -> buslineService.getBuslines());
     }
 
     @Test
-    void testGetBuslineInformationWhenJourneyPatternPointOnLineReturnsEmptyData() throws RepositoryException, ServiceException {
+    void testGetBuslinesWhenJourneyPatternPointOnLineReturnsEmptyData() throws RepositoryException, ServiceException {
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(Arrays.asList());
-        assertEquals(0, buslineService.getBusLineInformation().size());
+        assertEquals(0, buslineService.getBuslines().size());
     }
 
     @Test
-    void testGetBuslineInformationWhenStopPointsAreEmpty() throws RepositoryException, ServiceException {
+    void testGetBuslinesWhenStopPointsAreEmpty() throws RepositoryException, ServiceException {
         Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
-        listOfJourneyPatternPointOnLine.addAll(createABusLine(1, 10));
+        var journeys = createJourneyPatterPointWithStopPoints(1, 2, createStopPoints(1));
+        listOfJourneyPatternPointOnLine.addAll(journeys);
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
         Mockito.when(slLinesRepository.getStopPoints()).thenReturn(Arrays.asList());
-        assertEquals(0, buslineService.getBusLineInformation().size());
+        assertEquals(1, buslineService.getBuslines().size());
     }
 
     @Test
-    void testGetBuslineInformationWhenStopPointsRepositoryError() throws RepositoryException {
+    void testGetBuslinesWhenStopPointsRepositoryError() throws RepositoryException {
         Mockito.when(slLinesRepository.getStopPoints()).thenThrow(RepositoryException.class);
-        assertThrows(ServiceException.class, () -> buslineService.getBusLineInformation());
-    }
-
-    @Test
-    void testDoTheTask() throws ServiceException, RepositoryException {
-        mockSlLinesRepository();
-
-        Collection<BuslineInformation> buslineInformations = buslineService.doTheTask();
-        assertEquals(4, buslineInformations.size());
-        var list = buslineInformations.stream().toList();
-        assertEquals(1, list.get(0).buslineNumber());
-        assertEquals(4, list.get(1).buslineNumber());
-        assertEquals(3, list.get(2).buslineNumber());
-        assertEquals(2, list.get(3).buslineNumber());
+        assertThrows(ServiceException.class, () -> buslineService.getBuslines());
     }
 
 
-    List<StopPoint> createStopPoints() {
+    List<StopPoint> createStopPoints(int amount) {
         List<StopPoint> listOfStopPoints = new ArrayList<>();
-        for(int i = 0; i < 100; i++) {
+        for(int i = 0; i < amount; i++) {
             var stopPoint = new StopPoint(i, "Slipsknutsgatan " + i);
             listOfStopPoints.add(stopPoint);
         }
         return listOfStopPoints;
     }
 
-    List<JourneyPatternPointOnLine> createABusLine(int lineNumber, int amountOfStops) {
-        var stopPoints = createStopPoints();
-        List<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
-        for(int i = 0; i < amountOfStops; i++) {
-            var journeyPatternPoint = new JourneyPatternPointOnLine(lineNumber, 2, stopPoints.get(i).id());
-            listOfJourneyPatternPointOnLine.add(journeyPatternPoint);
+
+    List<JourneyPatternPointOnLine> createJourneyPatterPointWithStopPoints(int id, int directionCode, List<StopPoint> stopPoints) {
+        List<JourneyPatternPointOnLine> journeys = new ArrayList<>();
+        for(var stopPoint : stopPoints) {
+            JourneyPatternPointOnLine journey = new JourneyPatternPointOnLine(id, directionCode, stopPoint.id());
+            journeys.add(journey);
         }
-        return listOfJourneyPatternPointOnLine;
+        return journeys;
     }
 
-    void mockSlLinesRepository() throws RepositoryException {
-        Collection<JourneyPatternPointOnLine> listOfJourneyPatternPointOnLine = new ArrayList<>();
-        Collection<StopPoint> listOfStopPoints = new ArrayList<>();
-
-
-        listOfJourneyPatternPointOnLine.addAll(createABusLine(1, 10));
-        listOfJourneyPatternPointOnLine.addAll(createABusLine(2, 3));
-        listOfJourneyPatternPointOnLine.addAll(createABusLine(3, 5));
-        listOfJourneyPatternPointOnLine.addAll(createABusLine(4, 8));
-
-        listOfStopPoints.addAll(createStopPoints());
-
-        Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
-        Mockito.when(slLinesRepository.getStopPoints()).thenReturn(listOfStopPoints);
-    }
 
 }

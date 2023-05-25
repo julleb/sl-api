@@ -8,7 +8,9 @@ import se.slapi.repository.sllines.SlLinesRepository;
 import se.slapi.repository.sllines.model.JourneyPatternPointOnLine;
 import se.slapi.repository.sllines.model.StopPoint;
 import se.slapi.repository.sllines.model.TransportModeCode;
+import se.slapi.service.model.Busline;
 import se.slapi.service.model.BuslineInformation;
+import se.slapi.service.model.TrafficRoute;
 
 import java.util.*;
 
@@ -22,7 +24,9 @@ public class BuslineService {
         this.slLinesRepository = slLinesRepository;
     }
 
-    Map<Integer, BuslineInformation> getBusLineInformation() throws ServiceException {
+
+    public List<Busline> getBuslines() throws ServiceException {
+        List<Busline> buslines = new ArrayList<>();
         Collection<JourneyPatternPointOnLine> journeyPatternPointOnLineCollection;
         Collection<StopPoint> stopPoints;
         try {
@@ -36,40 +40,28 @@ public class BuslineService {
         for(StopPoint stopPoint : stopPoints) {
             stopPointsMap.put(stopPoint.id(), stopPoint);
         }
-
-        Map<Integer, BuslineInformation> busInformationMap = new HashMap<>();
+        Map<Integer, Busline> buslineMap = new HashMap<>();
+        Map<Integer, Map<Integer,TrafficRoute>> buslineIdToTrafficRoutes = new HashMap<>();
         for(var journeyPatternPoint : journeyPatternPointOnLineCollection) {
             int busLineNumber = journeyPatternPoint.lineNumber();
-            BuslineInformation busLineInformation = busInformationMap.get(busLineNumber);
-            if(busLineInformation == null) {
-                busLineInformation = new BuslineInformation(busLineNumber, new ArrayList<>());
-                busInformationMap.put(busLineInformation.buslineNumber(), busLineInformation);
+            Busline busline = buslineMap.get(busLineNumber);
+            if(busline == null) {
+                busline = new Busline(busLineNumber, new ArrayList<>());
+                buslineMap.put(busline.id(), busline);
+                buslineIdToTrafficRoutes.put(busline.id(), new HashMap<>());
+                buslines.add(busline);
             }
             int stopPointId = journeyPatternPoint.journeyPatternPointNumber();
+            int directionCode = journeyPatternPoint.DirectionCode();
+            TrafficRoute trafficRoute = buslineIdToTrafficRoutes.get(busline.id()).get(directionCode);
+            if(trafficRoute == null) {
+                trafficRoute = new TrafficRoute(directionCode, new ArrayList<>());
+                busline.trafficRoutes().add(trafficRoute);
+                buslineIdToTrafficRoutes.get(busline.id()).put(directionCode, trafficRoute);
+            }
             StopPoint stopPoint = stopPointsMap.get(stopPointId);
-            String stopPointName = stopPoint == null || stopPoint.name() == null ? "" : stopPoint.name();
-            if(!busLineInformation.stopNames().contains(stopPointName)) //SL api returnerar dubbletter? vrf? TODO dumt att gå igenom hela arrayen varje gång
-                busLineInformation.stopNames().add(stopPointName);
+            trafficRoute.stopPoints().add(stopPoint);
         }
-        return busInformationMap;
-    }
-
-    public Collection<BuslineInformation> doTheTask() throws ServiceException {
-        Map<Integer, BuslineInformation> busInformationMap = getBusLineInformation();
-        List<BuslineInformation> buslineInformations
-                = busInformationMap.values().stream().sorted(Comparator.comparing(o -> o.stopNames().size())).toList();
-
-        List<BuslineInformation> reversedBuslineInformationList = new ArrayList<>();
-        for(int i = buslineInformations.size() - 1; i >= 0; i--) {
-            reversedBuslineInformationList.add(buslineInformations.get(i));
-        }
-
-        reversedBuslineInformationList = reversedBuslineInformationList.stream().limit(10).toList();
-        System.out.println("TOP 10 BUS LINES");
-        for(var busInfo : reversedBuslineInformationList) {
-            System.out.println("BusLine="+busInfo.buslineNumber() + " AmountOfStops="+ busInfo.stopNames().size() + " StopNames="+busInfo.stopNames());
-        }
-        return reversedBuslineInformationList;
-
+        return buslines;
     }
 }

@@ -28,7 +28,6 @@ public class Main {
         @Override
         public void run(String... args) throws Exception {
             System.out.println("SL API");
-            buslineService.doTheTask();
         }
 
     }
