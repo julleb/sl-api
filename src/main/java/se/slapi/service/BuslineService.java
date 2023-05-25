@@ -1,6 +1,8 @@
 package se.slapi.service;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import se.slapi.repository.exceptions.RepositoryException;
@@ -16,6 +18,7 @@ import java.util.*;
 @Service
 public class BuslineService {
 
+    private final static Logger logger = LoggerFactory.getLogger(BuslineService.class);
     private SlLinesRepository slLinesRepository;
 
     @Autowired
@@ -59,6 +62,10 @@ public class BuslineService {
                 buslineIdToTrafficRoutes.get(busline.id()).put(directionCode, trafficRoute);
             }
             StopPoint stopPoint = stopPointsMap.get(stopPointId);
+            if(stopPoint == null) {
+                logger.warn("StopPointId=" + stopPointId
+                        + " from JourneyPatternPoint with id=" + journeyPatternPoint.journeyPatternPointNumber() + " does not exists");
+            }
             trafficRoute.stopPoints().add(stopPoint);
         }
         return buslines;
