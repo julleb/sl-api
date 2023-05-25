@@ -54,7 +54,7 @@ public class BuslineService {
                 buslines.add(busline);
             }
             int stopPointId = journeyPatternPoint.journeyPatternPointNumber();
-            int directionCode = journeyPatternPoint.DirectionCode();
+            int directionCode = journeyPatternPoint.directionCode();
             TrafficRoute trafficRoute = buslineIdToTrafficRoutes.get(busline.id()).get(directionCode);
             if(trafficRoute == null) {
                 trafficRoute = new TrafficRoute(directionCode, new ArrayList<>());
