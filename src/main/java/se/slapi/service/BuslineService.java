@@ -13,12 +13,12 @@ import se.slapi.service.model.BuslineInformation;
 import java.util.*;
 
 @Service
-public class SLService {
+public class BuslineService {
 
     private SlLinesRepository slLinesRepository;
 
     @Autowired
-    public SLService(SlLinesRepository slLinesRepository) {
+    public BuslineService(SlLinesRepository slLinesRepository) {
         this.slLinesRepository = slLinesRepository;
     }
 

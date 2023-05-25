@@ -7,9 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-import se.slapi.repository.sllines.SlLinesRepository;
-import se.slapi.repository.sllines.model.TransportModeCode;
-import se.slapi.service.SLService;
+import se.slapi.service.BuslineService;
 
 
 @Configuration
@@ -25,12 +23,12 @@ public class Main {
     public class CommandLiner implements CommandLineRunner {
 
         @Autowired
-        private SLService slService;
+        private BuslineService buslineService;
 
         @Override
         public void run(String... args) throws Exception {
             System.out.println("SL API");
-            slService.doTheTask();
+            buslineService.doTheTask();
         }
 
     }

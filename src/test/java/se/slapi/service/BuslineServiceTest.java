@@ -14,9 +14,9 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SLServiceTest {
+class BuslineServiceTest {
 
-    private SLService slService;
+    private BuslineService buslineService;
 
     private SlLinesRepository slLinesRepository;
 
@@ -24,13 +24,13 @@ class SLServiceTest {
     @BeforeEach
     void setup() {
         slLinesRepository = Mockito.mock(SlLinesRepository.class);
-        slService = new SLService(slLinesRepository);
+        buslineService = new BuslineService(slLinesRepository);
     }
 
     @Test
     void testGetBuslineInformation() throws RepositoryException, ServiceException {
         mockSlLinesRepository();
-        Map<Integer, BuslineInformation> buslineInformationMap = slService.getBusLineInformation();
+        Map<Integer, BuslineInformation> buslineInformationMap = buslineService.getBusLineInformation();
         assertEquals(10, buslineInformationMap.get(1).stopNames().size());
         for(String stopName : buslineInformationMap.get(1).stopNames()) {
             assertTrue(stopName.contains("Slipsknutsgatan"));
@@ -40,13 +40,13 @@ class SLServiceTest {
     @Test
     void testGetBuslineInformationWhenJourneyPatternPointOnLineRepositoryError() throws RepositoryException {
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenThrow(RepositoryException.class);
-        assertThrows(ServiceException.class, () -> slService.getBusLineInformation());
+        assertThrows(ServiceException.class, () -> buslineService.getBusLineInformation());
     }
 
     @Test
     void testGetBuslineInformationWhenJourneyPatternPointOnLineReturnsEmptyData() throws RepositoryException, ServiceException {
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(Arrays.asList());
-        assertEquals(0, slService.getBusLineInformation().size());
+        assertEquals(0, buslineService.getBusLineInformation().size());
     }
 
     @Test
@@ -55,20 +55,20 @@ class SLServiceTest {
         listOfJourneyPatternPointOnLine.addAll(createABusLine(1, 10));
         Mockito.when(slLinesRepository.getListOfJourneyPatternPointOnLine(TransportModeCode.BUS)).thenReturn(listOfJourneyPatternPointOnLine);
         Mockito.when(slLinesRepository.getStopPoints()).thenReturn(Arrays.asList());
-        assertEquals(0, slService.getBusLineInformation().size());
+        assertEquals(0, buslineService.getBusLineInformation().size());
     }
 
     @Test
     void testGetBuslineInformationWhenStopPointsRepositoryError() throws RepositoryException {
         Mockito.when(slLinesRepository.getStopPoints()).thenThrow(RepositoryException.class);
-        assertThrows(ServiceException.class, () -> slService.getBusLineInformation());
+        assertThrows(ServiceException.class, () -> buslineService.getBusLineInformation());
     }
 
     @Test
     void testDoTheTask() throws ServiceException, RepositoryException {
         mockSlLinesRepository();
 
-        Collection<BuslineInformation> buslineInformations = slService.doTheTask();
+        Collection<BuslineInformation> buslineInformations = buslineService.doTheTask();
         assertEquals(4, buslineInformations.size());
         var list = buslineInformations.stream().toList();
         assertEquals(1, list.get(0).buslineNumber());
